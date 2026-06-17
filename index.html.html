@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BES Copilot Skill Assessment</title>
+<style>
+  :root {
+    --navy: #0f2a4a;
+    --blue: #0078d4;
+    --blue-light: #e8f3fc;
+    --teal: #00a693;
+    --teal-light: #e0f5f3;
+    --amber: #f5a623;
+    --amber-light: #fef6e8;
+    --green: #107c41;
+    --green-light: #e8f5ee;
+    --gray-100: #f5f7fa;
+    --gray-200: #e8ecf0;
+    --gray-400: #a0aab4;
+    --gray-600: #6b7280;
+    --gray-800: #1f2937;
+    --white: #ffffff;
+    --radius: 10px;
+    --shadow: 0 2px 16px rgba(15,42,74,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--gray-100);
+    color: var(--gray-800);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: var(--navy);
+    padding: 28px 32px 22px;
+    text-align: center;
+  }
+  .header-eyebrow {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.25;
+  }
+  .header-sub {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #9bb8d4;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 14px 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--gray-600);
+    margin-bottom: 6px;
+  }
+  .progress-bar-bg {
+    height: 7px;
+    background: var(--gray-200);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--teal) 100%);
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  /* Main layout */
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  /* Intro card */
+  .intro-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 22px 26px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--blue);
+  }
+  .intro-card h2 { font-size: 15px; color: var(--navy); margin-bottom: 8px; }
+  .intro-card p, .intro-card li { font-size: 13.5px; color: var(--gray-600); line-height: 1.6; }
+  .intro-card ol { padding-left: 18px; margin-top: 6px; }
+  .intro-card li { margin-bottom: 3px; }
+
+  /* Score bands */
+  .score-bands {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .band {
+    flex: 1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    text-align: center;
+    font-weight: 600;
+  }
+  .band.b { background: var(--blue-light); color: var(--blue); }
+  .band.i { background: var(--amber-light); color: #c47d00; }
+  .band.a { background: var(--green-light); color: var(--green); }
+  .band span { display: block; font-weight: 400; font-size: 11px; margin-top: 2px; }
+
+  /* Section headers */
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 700;
+    margin: 28px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--blue-light);
+  }
+
+  /* Question card */
+  .q-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s;
+  }
+  .q-card:hover { box-shadow: 0 4px 20px rgba(15,42,74,0.13); }
+  .q-card.answered { border-left: 3px solid var(--teal); }
+
+  .q-num {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--gray-400);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .q-text {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+
+  /* Option buttons */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .opt-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--gray-100);
+    border: 2px solid transparent;
+    border-radius: 7px;
+    padding: 10px 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s;
+    font-family: inherit;
+    width: 100%;
+  }
+  .opt-btn:hover {
+    border-color: var(--blue);
+    background: var(--blue-light);
+  }
+  .opt-btn.selected {
+    border-color: var(--teal);
+    background: var(--teal-light);
+  }
+  .opt-score {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--gray-200);
+    color: var(--gray-600);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .opt-btn.selected .opt-score {
+    background: var(--teal);
+    color: var(--white);
+  }
+  .opt-label {
+    font-size: 13.5px;
+    color: var(--gray-800);
+    line-height: 1.4;
+  }
+
+  /* Submit */
+  .submit-wrap {
+    margin-top: 32px;
+    text-align: center;
+  }
+  .submit-btn {
+    background: var(--blue);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    padding: 14px 40px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 10px rgba(0,120,212,0.3);
+  }
+  .submit-btn:hover { background: #006abd; transform: translateY(-1px); }
+  .submit-btn:disabled { background: var(--gray-400); cursor: not-allowed; transform: none; box-shadow: none; }
+  .submit-note {
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: var(--gray-600);
+  }
+
+  /* Results */
+  #results {
+    display: none;
+    margin-top: 16px;
+  }
+
+  .result-hero {
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .result-hero.beginner { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 2px solid #93c5fd; }
+  .result-hero.intermediate { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #fbbf24; }
+  .result-hero.advanced { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #6ee7b7; }
+
+  .result-badge {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 99px;
+    margin-bottom: 10px;
+  }
+  .beginner .result-badge { background: var(--blue); color: white; }
+  .intermediate .result-badge { background: var(--amber); color: white; }
+  .advanced .result-badge { background: var(--green); color: white; }
+
+  .result-score {
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .beginner .result-score { color: #1d4ed8; }
+  .intermediate .result-score { color: #b45309; }
+  .advanced .result-score { color: var(--green); }
+
+  .result-score-label {
+    font-size: 13px;
+    color: var(--gray-600);
+    margin-bottom: 14px;
+  }
+  .result-level {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .result-tagline {
+    font-size: 14px;
+    color: var(--gray-600);
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* Meaning & development section */
+  .result-detail {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 26px 28px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .result-detail h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .result-detail h3 .icon { font-size: 20px; }
+  .result-detail p {
+    font-size: 13.5px;
+    color: var(--gray-600);
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+  .result-detail ul {
+    list-style: none;
+    padding: 0;
+  }
+  .result-detail ul li {
+    font-size: 13.5px;
+    color: var(--gray-700);
+    line-height: 1.6;
+    padding: 7px 0 7px 24px;
+    position: relative;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .result-detail ul li:last-child { border-bottom: none; }
+  .result-detail ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  /* Progression checklist */
+  .progression {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 26px 28px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .progression h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 14px;
+  }
+  .check-list { list-style: none; padding: 0; }
+  .check-list li {
+    font-size: 13.5px;
+    padding: 6px 0 6px 28px;
+    position: relative;
+    color: var(--gray-700);
+    line-height: 1.5;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .check-list li:last-child { border-bottom: none; }
+  .check-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--teal);
+    font-weight: 800;
+    font-size: 14px;
+  }
+
+  /* CTA / resource box */
+  .resource-box {
+    background: var(--navy);
+    border-radius: var(--radius);
+    padding: 26px 28px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .resource-box h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+  .resource-box p {
+    font-size: 13.5px;
+    color: #9bb8d4;
+    margin-bottom: 18px;
+    line-height: 1.6;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .resource-btn {
+    display: inline-block;
+    background: var(--teal);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 7px;
+    padding: 12px 28px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.3px;
+  }
+  .resource-btn:hover { background: #009180; transform: translateY(-1px); }
+
+  /* Retake */
+  .retake-wrap { text-align: center; margin-top: 6px; }
+  .retake-btn {
+    background: transparent;
+    border: 2px solid var(--gray-200);
+    border-radius: 7px;
+    padding: 10px 24px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .retake-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .header { padding: 20px 16px 18px; }
+    .header h1 { font-size: 20px; }
+    .progress-wrap { padding: 12px 16px; }
+    .container { padding: 16px 12px 50px; }
+    .score-bands { flex-direction: column; }
+    .result-score { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">BES AI Central</div>
+  <h1>Copilot Skill Self-Assessment</h1>
+  <p class="header-sub">15 questions · Identify your proficiency level · Get personalized development guidance</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-meta">
+    <span id="progress-text">0 of 15 answered</span>
+    <span id="progress-pct">0%</span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="intro-card">
+    <h2>How to take this assessment</h2>
+    <ol>
+      <li>Answer all 15 questions as honestly as possible — choose the option that best describes your <em>current</em> habits.</li>
+      <li>Select one answer per question; your score updates automatically.</li>
+      <li>Click <strong>See My Results</strong> at the bottom to reveal your proficiency level and next steps.</li>
+    </ol>
+    <div class="score-bands">
+      <div class="band b">Beginner<span>0–12 pts</span></div>
+      <div class="band i">Intermediate<span>13–22 pts</span></div>
+      <div class="band a">Advanced<span>23–30 pts</span></div>
+    </div>
+  </div>
+
+  <div id="questions-wrap"></div>
+
+  <div class="submit-wrap" id="submit-wrap">
+    <button class="submit-btn" id="submit-btn" disabled onclick="showResults()">See My Results</button>
+    <p class="submit-note" id="submit-note">Answer all 15 questions to unlock your results.</p>
+  </div>
+
+  <div id="results"></div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    section: "Daily Usage Habits",
+    text: "How often do you use Copilot in your daily work?",
+    options: [
+      { label: "Rarely or never", score: 0 },
+      { label: "A few times per week", score: 1 },
+      { label: "Daily", score: 2 }
+    ]
+  },
+  {
+    section: "Daily Usage Habits",
+    text: "What do you primarily use Copilot for?",
+    options: [
+      { label: "Simple tasks (rewriting emails, basic summaries)", score: 0 },
+      { label: "Some structured outputs (lists, drafts, outlines)", score: 1 },
+      { label: "Complex outputs (event plans, stakeholder communications, analysis)", score: 2 }
+    ]
+  },
+  {
+    section: "Daily Usage Habits",
+    text: "When using Copilot, how specific are your prompts?",
+    options: [
+      { label: "Very general — I keep it simple", score: 0 },
+      { label: "Some detail — I include tone, audience, or format", score: 1 },
+      { label: "Highly structured — I include context, role, format, and desired outcome", score: 2 }
+    ]
+  },
+  {
+    section: "Daily Usage Habits",
+    text: "Do you revise or refine Copilot outputs?",
+    options: [
+      { label: "Rarely — I use them mostly as-is", score: 0 },
+      { label: "Sometimes", score: 1 },
+      { label: "Regularly — I iterate to improve quality", score: 2 }
+    ]
+  },
+  {
+    section: "Daily Usage Habits",
+    text: "Do you track or pause to consider the time savings you gain with Copilot?",
+    options: [
+      { label: "Not really", score: 0 },
+      { label: "Occasionally", score: 1 },
+      { label: "Frequently — I have a system for noticing and capturing this", score: 2 }
+    ]
+  },
+  {
+    section: "Daily Responsibility Application",
+    text: "Have you used Copilot to support your daily job tasks?",
+    options: [
+      { label: "No", score: 0 },
+      { label: "Yes, for basic support", score: 1 },
+      { label: "Yes, across multiple areas of my work", score: 2 }
+    ]
+  },
+  {
+    section: "Daily Responsibility Application",
+    text: "You need a client-ready communication. What do you do?",
+    options: [
+      { label: "Write it manually", score: 0 },
+      { label: "Use Copilot for a draft", score: 1 },
+      { label: "Use Copilot with a structured prompt and refine it for the audience", score: 2 }
+    ]
+  },
+  {
+    section: "Daily Responsibility Application",
+    text: "Have you used Copilot to analyze or extract information from documents or data?",
+    options: [
+      { label: "No", score: 0 },
+      { label: "Yes, simple extraction", score: 1 },
+      { label: "Yes, detailed extraction and validation", score: 2 }
+    ]
+  },
+  {
+    section: "Daily Responsibility Application",
+    text: "Do you use Copilot to create structured deliverables — presentations, executive summaries, reports?",
+    options: [
+      { label: "No", score: 0 },
+      { label: "Sometimes", score: 1 },
+      { label: "Frequently and intentionally", score: 2 }
+    ]
+  },
+  {
+    section: "Daily Responsibility Application",
+    text: "Have you used Copilot to improve client or stakeholder communication?",
+    options: [
+      { label: "No", score: 0 },
+      { label: "Occasionally", score: 1 },
+      { label: "Regularly — I tailor tone, audience clarity, and messaging", score: 2 }
+    ]
+  },
+  {
+    section: "Strategy & Efficiency",
+    text: "Do you use a prompt structure such as SCARF or a similar framework?",
+    options: [
+      { label: "No — I write prompts without a framework", score: 0 },
+      { label: "Sometimes", score: 1 },
+      { label: "Consistently", score: 2 }
+    ]
+  },
+  {
+    section: "Strategy & Efficiency",
+    text: "Do you check Copilot outputs for accuracy before using them?",
+    options: [
+      { label: "Rarely", score: 0 },
+      { label: "Sometimes", score: 1 },
+      { label: "Always — I validate before using", score: 2 }
+    ]
+  },
+  {
+    section: "Strategy & Efficiency",
+    text: "Have you taught or shared Copilot tips with others?",
+    options: [
+      { label: "No", score: 0 },
+      { label: "Informally — in conversation", score: 1 },
+      { label: "Yes — through training, guidance, or shared examples", score: 2 }
+    ]
+  },
+  {
+    section: "Strategy & Efficiency",
+    text: "Do you think about when Copilot is the right tool versus when another approach is better?",
+    options: [
+      { label: "No", score: 0 },
+      { label: "Sometimes", score: 1 },
+      { label: "Yes — I make that judgment call intentionally", score: 2 }
+    ]
+  },
+  {
+    section: "Strategy & Efficiency",
+    text: "Have you explored more advanced Copilot functions (such as Agents, Skills, or Copilot Create) with an advanced license?",
+    options: [
+      { label: "No", score: 0 },
+      { label: "I've explored some", score: 1 },
+      { label: "Yes — I use them intentionally when available", score: 2 }
+    ]
+  }
+];
+
+const resultContent = {
+  beginner: {
+    level: "Beginner",
+    tagline: "Awareness & Assisted Use",
+    heroClass: "beginner",
+    what: `You're at the starting line — and that's a great place to be. Being a Beginner Copilot user means you're aware of the tool and have likely used it for simple tasks: rewriting an email, getting a quick summary, or generating a basic draft. You may still approach Copilot with some uncertainty about what it can really do, or you might not yet be using it every day. That's completely normal at this stage. The biggest opportunity right now is building confidence through repetition — the more you use it, the faster you'll see what it's capable of.`,
+    steps: [
+      "Use Copilot every day, even for small things. Rewrite one email. Summarize one document. Daily habit builds confidence faster than occasional deep dives.",
+      "Move from one-line prompts to structured ones. Instead of \"summarize this,\" try \"summarize this for a client audience in 3 bullet points, focusing on key risks.\"",
+      "Save prompts that work. Start a simple list in a Word doc or OneNote of prompts you've used that gave you a great result.",
+      "Try Copilot for one new task this week that you've never used it for — a meeting agenda, a quick analysis, or a rough first draft of a proposal.",
+      "Ask a colleague what Copilot task saved them the most time. Others' wins are shortcuts to your own.",
+      "Don't over-edit before you try. Let Copilot produce a draft first, then review. You may be surprised by how much is usable."
+    ],
+    progression: [
+      "Use Copilot at least a few times per week, then work toward daily use",
+      "Apply it to real work tasks, not just experiments",
+      "Repeat successful prompts and save the ones that work",
+      "Use Copilot to compare documents or extract key information",
+      "Begin sharing what you learn with at least one colleague",
+      "Explore LinkedIn Learning modules on Copilot and AI"
+    ]
+  },
+  intermediate: {
+    level: "Intermediate",
+    tagline: "Purposeful, Role-Based Productivity",
+    heroClass: "intermediate",
+    what: `You're in productive territory. Intermediate users use Copilot regularly and purposefully — applying it to real work tasks with structured prompts, reviewing outputs before using them, and beginning to see genuine time savings. You likely have a handful of "go-to" use cases where Copilot has become part of how you work, and you may have shared a tip or two with a colleague. The next horizon is moving from efficiency in individual tasks to rethinking how your workflows are designed — and starting to actively enable others around you.`,
+    steps: [
+      "Upgrade your prompting framework. Try SCARF or a similar structure (Situation, Context, Audience, Role, Format) consistently, not just sometimes.",
+      "Look at a recurring workflow and ask: where is Copilot not yet helping? Identify one place where it could eliminate a manual step entirely.",
+      "Start a team-facing prompt library. Even a shared OneNote page with 5–10 proven prompts can become a resource others rely on.",
+      "Use Copilot to synthesize across documents — compare two reports, extract themes across multiple meeting notes, or pull key decisions from a project thread.",
+      "Set a personal standard: validate every Copilot output before using it in client-facing or executive communications.",
+      "Volunteer to share a Copilot win in a team meeting, a Slack message, or a quick lunch-and-learn."
+    ],
+    progression: [
+      "Produce higher-quality outputs faster by refining your prompting approach",
+      "Establish personal Copilot-assisted routines for your most common job tasks",
+      "Actively teach or mentor at least one team member on effective use",
+      "Experiment with Copilot Create or advanced features if available",
+      "Participate in AI Catalyst Team conversations or initiatives",
+      "Build or contribute to a shared prompt library for your team"
+    ]
+  },
+  advanced: {
+    level: "Advanced",
+    tagline: "Strategic, Repeatable & Transformational Use",
+    heroClass: "advanced",
+    what: `You're operating at the leading edge of Copilot capability — at least within the basic Microsoft Copilot environment. Advanced users think strategically about AI, not just tactically. You use Copilot to redesign how work gets done, you validate rigorously, you coach others, and you're likely already influencing how your team thinks about AI-assisted workflows. You're a visible contributor to a more capable team. At this level, the opportunity is to amplify your impact — by formalizing what you know, teaching intentionally, and pushing into the edges of what's possible even without a premium license.`,
+    steps: [
+      "Document your best workflows. Turn your most effective Copilot-assisted processes into simple SOPs or guides others on your team can follow.",
+      "Take on a formal enabling role. Volunteer as a Copilot champion, offer to run a short team workshop, or participate in an AI Catalyst Team.",
+      "Push into advanced territory. Even with a basic license, explore Copilot's less-obvious capabilities — complex document analysis, multi-step prompting chains, cross-app use.",
+      "Mentor a beginner or intermediate colleague with a specific, practical goal (e.g., \"Let's get you drafting client comms with Copilot by end of month\").",
+      "Challenge your own outputs. At this level, the risk is over-reliance. Regularly ask: Is Copilot giving me the best answer here, or just a fast one?",
+      "Stay current. Copilot capabilities evolve quickly. Follow BES AI Central, Microsoft's Copilot updates, and community conversations."
+    ],
+    progression: [
+      "Formalize your Copilot-assisted routines into team-accessible SOPs",
+      "Lead or co-lead an AI Catalyst Team initiative",
+      "Advocate for expanded AI capabilities or licensing within BES",
+      "Explore Agents, Skills, or Copilot Create if premium access becomes available",
+      "Contribute to the BES AI community of practice with prompts, case studies, or insights",
+      "Model responsible, validated, and transparent AI use for others"
+    ]
+  }
+};
+
+let answers = new Array(15).fill(null);
+
+function buildQuestions() {
+  const wrap = document.getElementById('questions-wrap');
+  let currentSection = '';
+  questions.forEach((q, i) => {
+    if (q.section !== currentSection) {
+      currentSection = q.section;
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.textContent = q.section;
+      wrap.appendChild(label);
+    }
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard-${i}`;
+    card.innerHTML = `
+      <div class="q-num">Question ${i + 1} of 15</div>
+      <div class="q-text">${q.text}</div>
+      <div class="options" id="opts-${i}">
+        ${q.options.map((opt, j) => `
+          <button class="opt-btn" onclick="selectAnswer(${i}, ${j}, ${opt.score})">
+            <span class="opt-score">${opt.score}</span>
+            <span class="opt-label">${opt.label}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function selectAnswer(qIdx, optIdx, score) {
+  answers[qIdx] = score;
+  const opts = document.querySelectorAll(`#opts-${qIdx} .opt-btn`);
+  opts.forEach((b, j) => {
+    b.classList.toggle('selected', j === optIdx);
+  });
+  document.getElementById(`qcard-${qIdx}`).classList.add('answered');
+  updateProgress();
+}
+
+function updateProgress() {
+  const answered = answers.filter(a => a !== null).length;
+  const pct = Math.round((answered / 15) * 100);
+  document.getElementById('progress-text').textContent = `${answered} of 15 answered`;
+  document.getElementById('progress-pct').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  const btn = document.getElementById('submit-btn');
+  const note = document.getElementById('submit-note');
+  if (answered === 15) {
+    btn.disabled = false;
+    note.textContent = "All questions answered — you're ready!";
+  } else {
+    btn.disabled = true;
+    note.textContent = `Answer all 15 questions to unlock your results. (${15 - answered} remaining)`;
+  }
+}
+
+function showResults() {
+  const total = answers.reduce((s, a) => s + a, 0);
+  let level;
+  if (total <= 12) level = 'beginner';
+  else if (total <= 22) level = 'intermediate';
+  else level = 'advanced';
+
+  const content = resultContent[level];
+  const resultsDiv = document.getElementById('results');
+
+  resultsDiv.innerHTML = `
+    <div class="result-hero ${content.heroClass}">
+      <div class="result-badge">${content.tagline}</div>
+      <div class="result-score">${total}</div>
+      <div class="result-score-label">out of 30 points</div>
+      <div class="result-level">You are a ${content.level} Copilot User</div>
+      <div class="result-tagline">${level === 'beginner' ? 'Score 0–12 · Building your foundation' : level === 'intermediate' ? 'Score 13–22 · Using Copilot with purpose' : 'Score 23–30 · Leading the way'}</div>
+    </div>
+
+    <div class="result-detail">
+      <h3><span class="icon">🔍</span> What This Means</h3>
+      <p>${content.what}</p>
+    </div>
+
+    <div class="result-detail">
+      <h3><span class="icon">🚀</span> Recommended Next Steps</h3>
+      <ul>
+        ${content.steps.map(s => `<li>${s}</li>`).join('')}
+      </ul>
+    </div>
+
+    <div class="progression">
+      <h3>📈 What Progression Looks Like for You</h3>
+      <ul class="check-list">
+        ${content.progression.map(p => `<li>${p}</li>`).join('')}
+      </ul>
+    </div>
+
+    <div class="resource-box">
+      <h3>📚 Ready to grow your Copilot skills?</h3>
+      <p>To find resources that support your development, return to the BES AI Central Site to access helpful information — from learning modules and prompt guides to community insights and team enablement tools.</p>
+      <a class="resource-btn" href="https://maritzllc.sharepoint.com/sites/besaicommunityofpractice/SitePages/Learning-Resources.aspx" target="_blank">Explore BES AI Central Learning Resources →</a>
+    </div>
+
+    <div class="retake-wrap">
+      <button class="retake-btn" onclick="retake()">↺ Retake Assessment</button>
+    </div>
+  `;
+
+  resultsDiv.style.display = 'block';
+  document.getElementById('submit-wrap').style.display = 'none';
+  resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function retake() {
+  answers = new Array(15).fill(null);
+  document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.q-card').forEach(c => c.classList.remove('answered'));
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('submit-wrap').style.display = 'block';
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+buildQuestions();
+updateProgress();
+</script>
+</body>
+</html>
